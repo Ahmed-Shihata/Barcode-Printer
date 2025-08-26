@@ -40,10 +40,10 @@ function print_barcode(frm) {
                 // Create object URL
                 let imageUrl = window.URL.createObjectURL(imageBlob);
                 
-                // Create print window with barcode
-                print_barcode_window(imageUrl, frm.doc.item_name, frm.doc.name, lastBarcode.barcode);
+                // Create print window with exact card format
+                print_barcode_card(imageUrl, lastBarcode.barcode);
                 
-                frappe.msgprint(__('Printing barcode for: ') + lastBarcode.barcode);
+                frappe.msgprint(__('Printing barcode card for: ') + lastBarcode.barcode);
             }
         },
         error: function(error) {
@@ -52,53 +52,80 @@ function print_barcode(frm) {
     });
 }
 
-function print_barcode_window(imageUrl, itemName, itemCode, barcodeValue) {
+function print_barcode_card(imageUrl, barcodeValue) {
     // Create new window for printing
-    let printWindow = window.open('', '_blank');
+    let printWindow = window.open('', '_blank', 'width=400,height=300');
     
     printWindow.document.write(`
         <html>
             <head>
-                <title>Print Barcode</title>
+                <title>Print Barcode Card</title>
                 <style>
-                    body { 
-                        font-family: Arial, sans-serif; 
-                        text-align: center; 
-                        margin: 20px;
+                    @page {
+                        size: 85mm 54mm;
+                        margin: 0;
                     }
-                    .barcode-container {
-                        border: 1px solid #ccc;
-                        padding: 20px;
-                        display: inline-block;
-                        margin: 20px;
+                    
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
                     }
-                    .item-info {
-                        margin-bottom: 15px;
-                        font-size: 14px;
+                    
+                    html, body {
+                        width: 85mm;
+                        height: 54mm;
+                        margin: 0;
+                        padding: 0;
+                        background: white;
+                        overflow: hidden;
                     }
+                    
+                    .card-container {
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        background: white;
+                        padding: 3mm;
+                    }
+                    
                     .barcode-image {
-                        margin: 10px 0;
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
                     }
+                    
+                    .barcode-image img {
+                        max-width: 100%;
+                        max-height: 100%;
+                        object-fit: contain;
+                    }
+                    
                     @media print {
-                        body { margin: 0; }
-                        .barcode-container { border: none; }
+                        html, body {
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                        }
                     }
                 </style>
             </head>
             <body>
-                <div class="barcode-container">
-                    <div class="item-info">
-                        <strong>Item:</strong> ${itemName}<br>
-                        <strong>Code:</strong> ${itemCode}<br>
-                        <strong>Barcode:</strong> ${barcodeValue}
-                    </div>
+                <div class="card-container">
                     <div class="barcode-image">
-                        <img src="${imageUrl}" alt="Barcode" style="max-width: 300px;">
+                        <img src="${imageUrl}" alt="Barcode">
                     </div>
                 </div>
                 <script>
                     window.onload = function() {
-                        window.print();
+                        setTimeout(function() {
+                            window.print();
+                        }, 500);
+                        
                         window.onafterprint = function() {
                             window.close();
                         }
@@ -113,5 +140,5 @@ function print_barcode_window(imageUrl, itemName, itemCode, barcodeValue) {
     // Clean up the object URL after a delay
     setTimeout(() => {
         window.URL.revokeObjectURL(imageUrl);
-    }, 1000);
+    }, 2000);
 }
